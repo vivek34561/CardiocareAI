@@ -19,3 +19,6 @@ xhtml2pdf
 Pillow
 fpdf
 pytest
+faiss-cpu
+tiktoken
+groq

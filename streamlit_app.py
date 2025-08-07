@@ -3,52 +3,35 @@ import io
 import unicodedata
 import streamlit as st
 from dotenv import load_dotenv
-from openai import OpenAI
 from fpdf import FPDF
+from groq import Groq
 from src.mlproject.predict_pipelines import PredictPipeline
 
 # Load environment variables
 load_dotenv()
-api_key = os.getenv("OPENAI_API_KEY")
-client = OpenAI(api_key=api_key)
 
-st.set_page_config(page_title="🫀 Heart Risk & Diet AI", layout="wide")
+st.set_page_config(page_title="🪀 Heart Risk & Diet AI", layout="wide")
 
-# ------------------------- 🔐 Password Protection -------------------------
-def check_password():
-    def password_entered():
-        if st.session_state["password"] == os.getenv("APP_PASSWORD"):
-            st.session_state["authenticated"] = True
-            del st.session_state["password"]
-        else:
-            st.session_state["authenticated"] = False
+# ------------------------- 🔑 API Key Input -------------------------
+st.sidebar.header("🔑 Configuration")
+groq_api_key = st.sidebar.text_input("Enter your Groq API Key", type="password")
 
-    if "authenticated" not in st.session_state:
-        st.text_input("🔐 Enter App Password", type="password", on_change=password_entered, key="password")
-        st.stop()
-    elif not st.session_state["authenticated"]:
-        st.text_input("🔐 Enter App Password", type="password", on_change=password_entered, key="password")
-        st.error("❌ Incorrect password. Try again.")
-        st.stop()
+if not groq_api_key:
+    st.warning("⚠️ Please enter your Groq API key in the sidebar to continue.")
+    st.stop()
 
-check_password()
-# ------------------------- End Password Protection -------------------------
+client = Groq(api_key=groq_api_key)
 
-st.title("🫀 Heart Disease Predictor & Diet Assistant")
+st.title("🪀 Heart Disease Predictor & Diet Assistant")
 
-# Initialize session state keys
-if "predicted" not in st.session_state:
-    st.session_state.predicted = False
-if "prediction" not in st.session_state:
-    st.session_state.prediction = None
-if "diet_plan_text" not in st.session_state:
-    st.session_state.diet_plan_text = ""
-if "chat_history" not in st.session_state:
-    st.session_state.chat_history = []
+# ------------------------- Session State Init -------------------------
+for key in ["predicted", "prediction", "diet_plan_text", "chat_history"]:
+    if key not in st.session_state:
+        st.session_state[key] = False if key == "predicted" else [] if key == "chat_history" else None
 
+# ------------------------- Tabs -------------------------
 tab1 = st.container()
 
-# ------------------------- TAB 1 -------------------------
 with tab1:
     st.subheader("📋 Your Health Profile")
 
@@ -56,9 +39,9 @@ with tab1:
         col1, col2 = st.columns(2)
         with col1:
             age = st.slider("🎂 Age", 20, 90, 45)
-            sex = st.radio("⚧️ Biological Sex", ["Male", "Female"])
+            sex = st.radio("♂️ Biological Sex", ["Male", "Female"])
         with col2:
-            exang = st.radio("🏃 Do you get chest pain during exercise?", ["No", "Yes"])
+            exang = st.radio("🏃 Chest pain during exercise?", ["No", "Yes"])
             fbs = st.radio("🍬 Fasting blood sugar > 120 mg/dL?", ["No", "Yes"])
 
     with st.expander("💓 Vitals & Tests", expanded=True):
@@ -70,18 +53,15 @@ with tab1:
         with col2:
             oldpeak = st.slider("📉 ST Depression (Exercise vs Rest)", 0.0, 6.0, 1.0, 0.1)
             restecg = st.selectbox("📈 ECG Results", ["Normal", "ST-T Abnormality", "Left Ventricular Hypertrophy"])
-            slope = st.selectbox("📐 Slope of ST Segment", ["Upsloping", "Flat", "Downsloping"])
+            slope = st.selectbox("📊 Slope of ST Segment", ["Upsloping", "Flat", "Downsloping"])
 
     with st.expander("🧬 Medical History", expanded=True):
         col1, col2 = st.columns(2)
         with col1:
             cp = st.selectbox("💓 Chest Pain Type", ["Typical Angina", "Atypical Angina", "Non-anginal", "Asymptomatic"])
         with col2:
-            ca = st.selectbox("🩻 Number of Major Vessels Colored", [0, 1, 2, 3])
-            thal = st.selectbox("🧬 Thalassemia", ["Normal", "Fixed Defect", "Reversible Defect"])
-
-    predict_btn = st.button("🚑 Predict Risk")
-    diet_btn = st.button("🥗 Generate Diet Plan")
+            ca = st.selectbox("🦠 Number of Major Vessels Colored", [0, 1, 2, 3])
+            thal = st.selectbox("🦬 Thalassemia", ["Normal", "Fixed Defect", "Reversible Defect"])
 
     model_input = {
         "age": age,
@@ -98,6 +78,25 @@ with tab1:
         "ca": ca,
         "thal": ["Normal", "Fixed Defect", "Reversible Defect"].index(thal),
     }
+
+    predict_btn = st.button("🚑 Predict Risk")
+    diet_btn = st.button("🥗 Generate Diet Plan")
+    report_btn = st.button("🗾 Generate Risk Report")
+    lifestyle_btn = st.button("🏃 Lifestyle Suggestions")
+    doctor_note_btn = st.button("📄 Generate Doctor's Note")
+    language = st.selectbox("🌐 Select Output Language", ["English", "Hindi", "Spanish", "Tamil", "Bengali"])
+
+    def translate_text(text, target_language):
+        if target_language == "English":
+            return text
+        response = client.chat.completions.create(
+            model="llama3-70b-8192",
+            messages=[
+                {"role": "system", "content": "You are a helpful translator."},
+                {"role": "user", "content": f"Translate this to {target_language}:\n{text}"}
+            ]
+        )
+        return response.choices[0].message.content.strip()
 
     if predict_btn:
         pipeline = PredictPipeline()
@@ -117,20 +116,14 @@ with tab1:
             st.warning("⚠️ Please run the prediction first.")
         else:
             prompt = f"""
-🧑‍⚕️ I’m a {age}-year-old {"male" if model_input['sex'] else "female"} with:
-💉 BP: {trestbps} | 🧪 Cholesterol: {chol} | 🍬 Fasting Sugar: {"Yes" if model_input['fbs'] else "No"}
-❤️ Max HR: {thalach} | 📉 ST Depression: {oldpeak} | 🧬 Thalassemia: {thal}
-
-🍽️ Create a heart-healthy diet plan:
-✅ Must include:
-- 🌿 Essential nutrients (vitamins, minerals, macros)
-- 🥗 Foods to eat & 🚫 avoid
-- 🍳 Breakfast, 🍛 Lunch, 🍲 Dinner recipes
-🎯 Tailor it to my condition & keep it practical.
+I’m a {age}-year-old {'male' if model_input['sex'] else 'female'} with:
+BP: {trestbps}, Cholesterol: {chol}, Fasting Sugar: {'Yes' if model_input['fbs'] else 'No'}
+Max HR: {thalach}, ST Depression: {oldpeak}, Thalassemia: {thal}
+Create a heart-healthy diet plan including nutrients, foods to eat/avoid, and sample meals.
 """
-            with st.spinner("🍎 Generating personalized diet plan..."):
+            with st.spinner("🍎 Generating diet plan..."):
                 response = client.chat.completions.create(
-                    model="gpt-4o",
+                    model="llama3-70b-8192",
                     messages=[
                         {"role": "system", "content": "You are a certified medical dietitian."},
                         {"role": "user", "content": prompt}
@@ -140,70 +133,79 @@ with tab1:
                 st.session_state["diet_plan_text"] = response.choices[0].message.content
 
     if st.session_state["diet_plan_text"]:
-        st.subheader("🥗 Recommended Diet Plan")
-        formatted_diet = st.session_state["diet_plan_text"].replace("\n", "<br>")
-        st.markdown(
-            f"""
-            <div style='background-color:#068f88;padding:15px;border-radius:10px;border:1px solid #ddd'>
-            {formatted_diet}
-            </div>
-            """,
-            unsafe_allow_html=True
-        )
+        formatted = st.session_state["diet_plan_text"].replace("\n", "<br>")
+        st.markdown(f"<div style='background:#068f88;padding:15px;border-radius:10px'>{formatted}</div>", unsafe_allow_html=True)
 
         def clean_text(text):
             return unicodedata.normalize("NFKD", text).encode("ascii", "ignore").decode("ascii")
-
-        cleaned_diet_text = clean_text(st.session_state["diet_plan_text"])
 
         pdf = FPDF()
         pdf.add_page()
         pdf.set_auto_page_break(auto=True, margin=15)
         pdf.set_font("Arial", size=12)
-        for line in cleaned_diet_text.split('\n'):
+        for line in clean_text(st.session_state["diet_plan_text"]).split('\n'):
             pdf.multi_cell(0, 10, line)
-        pdf_output = pdf.output(dest='S').encode('latin1')
-        pdf_buffer = io.BytesIO(pdf_output)
-        pdf_buffer.seek(0)
+        st.download_button("📥 Download Diet Plan", io.BytesIO(pdf.output(dest="S").encode("latin1")), "diet_plan.pdf")
 
-        st.download_button(
-            label="📥 Download Diet Plan as PDF",
-            data=pdf_buffer,
-            file_name="heart_diet_plan.pdf",
-            mime="application/pdf"
-        )
+    if report_btn and st.session_state["predicted"]:
+        with st.spinner("📊 Analyzing risk factors..."):
+            prompt = f"""
+You are a cardiologist. Explain why the patient was predicted {'high' if st.session_state['prediction'] else 'low'} risk.
+Age: {age}, Sex: {'Male' if model_input['sex'] else 'Female'}, Chol: {chol}, BP: {trestbps}, HR: {thalach}, ST Depression: {oldpeak}, Angina: {exang}, Thal: {thal}
+"""
+            response = client.chat.completions.create(
+                model="llama3-70b-8192",
+                messages=[{"role": "user", "content": prompt}]
+            )
+            st.markdown("### 🗾 Risk Report")
+            st.markdown(translate_text(response.choices[0].message.content.strip(), language))
 
-# ------------------------- SIDEBAR CHATBOT -------------------------
+    if lifestyle_btn and st.session_state["predicted"]:
+        with st.spinner("🏃 Generating recommendations..."):
+            prompt = f"""
+Give daily lifestyle advice on diet, exercise, stress, and sleep for a patient with:
+Age: {age}, Sex: {'Male' if model_input['sex'] else 'Female'}, BP: {trestbps}, Chol: {chol}, HR: {thalach}, ST Depression: {oldpeak}
+"""
+            response = client.chat.completions.create(
+                model="llama3-70b-8192",
+                messages=[{"role": "user", "content": prompt}]
+            )
+            st.markdown("### 🏃 Lifestyle Advice")
+            st.markdown(translate_text(response.choices[0].message.content.strip(), language))
+
+    if doctor_note_btn and st.session_state["predicted"]:
+        with st.spinner("📄 Drafting summary..."):
+            prompt = f"""
+Draft a doctor's summary note from patient profile and risk status:
+Age: {age}, Sex: {'Male' if model_input['sex'] else 'Female'}, Risk: {'High' if st.session_state['prediction'] else 'Low'},
+BP: {trestbps}, Chol: {chol}, HR: {thalach}, ST Depression: {oldpeak}, Angina: {exang}, Thalassemia: {thal}, Vessels: {ca}
+"""
+            response = client.chat.completions.create(
+                model="llama3-70b-8192",
+                messages=[{"role": "user", "content": prompt}]
+            )
+            st.markdown("### 📄 Doctor's Note")
+            st.markdown(translate_text(response.choices[0].message.content.strip(), language))
+
+# ------------------------- Sidebar Chatbot -------------------------
 with st.sidebar:
-    st.header("💬 Diet Chatbot")
-
-    user_input = st.text_input("❓ Ask a diet-related question")
+    st.header("💬 Diet & Medical Chatbot")
+    user_input = st.text_input("❓ Ask anything")
 
     if user_input:
-        with st.spinner("🤖 Dietitian is typing..."):
-            full_chat = [
-                {"role": "system", "content": "You are a diet consultant bot named Healthy(B) made by Vivek. Always introduce yourself."},
+        with st.spinner("🧐 Thinking..."):
+            messages = [
+                {"role": "system", "content": "You are Healthy(B), a multilingual diet and heart health expert."},
+                {"role": "user", "content": user_input}
             ]
-            if st.session_state["diet_plan_text"]:
-                full_chat.append({
-                    "role": "user",
-                    "content": f"This is my diet plan:\n{st.session_state['diet_plan_text']}"
-                })
-            full_chat.extend(st.session_state.chat_history)
-            full_chat.append({"role": "user", "content": user_input})
-
-            response = client.chat.completions.create(
-                model="gpt-4o",
-                messages=full_chat,
-                max_tokens=200
-            )
+            response = client.chat.completions.create(model="llama3-70b-8192", messages=messages, max_tokens=300)
             reply = response.choices[0].message.content
             st.session_state.chat_history.append({"role": "user", "content": user_input})
             st.session_state.chat_history.append({"role": "assistant", "content": reply})
+            st.markdown(translate_text(reply, language))
 
     if st.session_state.chat_history:
         st.markdown("---")
-        st.markdown("🧠 **Chat History**")
+        st.markdown("### 🪡 Chat History")
         for msg in reversed(st.session_state.chat_history):
-            role_emoji = "👤" if msg["role"] == "user" else "🩺"
-            st.markdown(f"{role_emoji} {msg['content']}")
+            st.markdown(f"**{msg['role'].capitalize()}**: {msg['content']}")
