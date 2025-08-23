@@ -11,7 +11,7 @@ Built with **Python**, **Machine Learning**, **Streamlit**, and **LangChain** (M
 
 ## 🌐 Live App
 
-🔗 [Access the App](https://end-to-end-heart-disease-prediction-2-a89x.onrender.com/)
+🔗 [Access the App](https://end-to-end-heart-disease-prediction-mhwpmnmvxn9hsahbuvxj6m.streamlit.app/)
 
 ---
 
