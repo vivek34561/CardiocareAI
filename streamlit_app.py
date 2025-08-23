@@ -9,7 +9,7 @@ st.set_page_config(page_title="🪀 Heart Risk & Diet AI", layout="wide")
 st.sidebar.header("🔑 Configuration")
 language = st.sidebar.selectbox("🌐 Select Output Language", ["English", "Hindi", "Spanish", "Tamil", "Bengali"])
 
-st.title("❤️ Heart Disease Predictor & Diet Assistant")
+st.title("🫀 Heart Disease Predictor & Diet Assistant")
 
 # ------------------------- Session State -------------------------
 for key in ["predicted", "prediction", "diet_plan_text", "risk_report", "lifestyle", "doctor_note", "chat_history"]:
