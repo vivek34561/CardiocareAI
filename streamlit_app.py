@@ -2,14 +2,14 @@ import streamlit as st
 import requests
 
 # ------------------------- Backend URL -------------------------
-API_URL = "http://127.0.0.1:8000"   # Change if deployed
+API_URL = "https://end-to-end-heart-disease-prediction-bfkm.onrender.com"   # Change if deployed
 
 st.set_page_config(page_title="🪀 Heart Risk & Diet AI", layout="wide")
 
 st.sidebar.header("🔑 Configuration")
 language = st.sidebar.selectbox("🌐 Select Output Language", ["English", "Hindi", "Spanish", "Tamil", "Bengali"])
 
-st.title("🪀 Heart Disease Predictor & Diet Assistant")
+st.title("❤️ Heart Disease Predictor & Diet Assistant")
 
 # ------------------------- Session State -------------------------
 for key in ["predicted", "prediction", "diet_plan_text", "risk_report", "lifestyle", "doctor_note", "chat_history"]:
@@ -89,9 +89,7 @@ with diet_tab:
         if st.session_state["diet_plan_text"]:
             st.markdown("### 🥗 Diet Plan")
             st.markdown(st.session_state["diet_plan_text"])
-            pdf_res = requests.post(f"{API_URL}/diet-plan/pdf", json=profile)
-            if pdf_res.status_code == 200:
-                st.download_button("📥 Download Diet Plan (PDF)", pdf_res.content, "diet_plan.pdf")
+            
 
     else:
         st.info("⚠️ Please complete your profile and run prediction first.")
@@ -107,9 +105,7 @@ with report_tab:
         if st.session_state.get("risk_report"):
             st.markdown("### 🗾 Risk Report")
             st.markdown(st.session_state["risk_report"])
-            pdf_res = requests.post(f"{API_URL}/risk-report/pdf", params={"prediction": st.session_state["prediction"]}, json=profile)
-            if pdf_res.status_code == 200:
-                st.download_button("📥 Download Risk Report (PDF)", pdf_res.content, "risk_report.pdf")
+            
 
     else:
         st.info("⚠️ Please complete your profile and run prediction first.")
@@ -155,7 +151,10 @@ with st.sidebar:
             reply = res.json()["reply"]
             st.session_state.chat_history.append({"role": "user", "content": user_input})
             st.session_state.chat_history.append({"role": "assistant", "content": reply})
-            st.markdown(reply)
+
+    for msg in st.session_state.chat_history[::-1]:
+        with st.chat_message(msg["role"]):
+            st.markdown(msg["content"])
 
     if st.session_state.chat_history:
         st.markdown("---")
