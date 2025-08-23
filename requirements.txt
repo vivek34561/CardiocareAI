@@ -22,3 +22,8 @@ pytest
 faiss-cpu
 tiktoken
 groq
+fastapi
+uvicorn
+pydantic
+requests
+joblib

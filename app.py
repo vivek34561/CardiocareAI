@@ -10,6 +10,7 @@ from pydantic import BaseModel
 from fpdf import FPDF
 from groq import Groq
 import os
+import uvicorn
 
 from src.mlproject.predict_pipelines import PredictPipeline
 
@@ -141,3 +142,8 @@ def chatbot(request: ChatRequest):
     response = client.chat.completions.create(model="llama3-70b-8192", messages=messages, max_tokens=300)
     reply = response.choices[0].message.content
     return {"reply": translate_text(reply, request.language)}
+
+
+
+if __name__ == "__main__":
+    uvicorn.run("app.main:app", host="0.0.0.0", port=int(os.environ.get("PORT", 8000)))
