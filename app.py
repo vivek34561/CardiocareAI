@@ -48,7 +48,7 @@ def translate_text(text: str, target_language: str) -> str:
     if target_language == "English":
         return text
     response = client.chat.completions.create(
-        model="llama3-70b-8192",
+        model="openai/gpt-oss-120b",
         messages=[
             {"role": "system", "content": "You are a helpful translator."},
             {"role": "user", "content": f"Translate this to {target_language}:\n{text}"}
@@ -92,7 +92,7 @@ Max HR: {profile.thalach}, ST Depression: {profile.oldpeak}, Thalassemia: {profi
 Create a heart-healthy diet plan including nutrients, foods to eat/avoid, and sample meals.
 """
     response = client.chat.completions.create(
-        model="llama3-70b-8192",
+        model="openai/gpt-oss-120b",
         messages=[{"role": "system", "content": "You are a certified medical dietitian."},
                   {"role": "user", "content": prompt}],
         max_tokens=800
@@ -107,7 +107,7 @@ You are a cardiologist. Explain why the patient was predicted {'high' if predict
 Age: {profile.age}, Sex: {profile.sex}, Chol: {profile.chol}, BP: {profile.trestbps}, 
 HR: {profile.thalach}, ST Depression: {profile.oldpeak}, Angina: {profile.exang}, Thal: {profile.thal}
 """
-    response = client.chat.completions.create(model="llama3-70b-8192", messages=[{"role": "user", "content": prompt}])
+    response = client.chat.completions.create(model="openai/gpt-oss-120b", messages=[{"role": "user", "content": prompt}])
     return {"risk_report": translate_text(response.choices[0].message.content.strip(), language)}
 
 
@@ -117,7 +117,7 @@ def lifestyle_advice(profile: HealthProfile, language: str = "English"):
 Give daily lifestyle advice on diet, exercise, stress, and sleep for a patient with:
 Age: {profile.age}, Sex: {profile.sex}, BP: {profile.trestbps}, Chol: {profile.chol}, HR: {profile.thalach}, ST Depression: {profile.oldpeak}
 """
-    response = client.chat.completions.create(model="llama3-70b-8192", messages=[{"role": "user", "content": prompt}])
+    response = client.chat.completions.create(model="openai/gpt-oss-120b", messages=[{"role": "user", "content": prompt}])
     return {"lifestyle": translate_text(response.choices[0].message.content.strip(), language)}
 
 
@@ -129,7 +129,7 @@ Age: {profile.age}, Sex: {profile.sex}, Risk: {"High" if prediction else "Low"},
 BP: {profile.trestbps}, Chol: {profile.chol}, HR: {profile.thalach}, ST Depression: {profile.oldpeak},
 Angina: {profile.exang}, Thalassemia: {profile.thal}, Vessels: {profile.ca}
 """
-    response = client.chat.completions.create(model="llama3-70b-8192", messages=[{"role": "user", "content": prompt}])
+    response = client.chat.completions.create(model="openai/gpt-oss-120b", messages=[{"role": "user", "content": prompt}])
     return {"doctor_note": translate_text(response.choices[0].message.content.strip(), language)}
 
 
@@ -139,7 +139,7 @@ def chatbot(request: ChatRequest):
         {"role": "system", "content": "You are Healthy(B), a multilingual diet and heart health expert."},
         {"role": "user", "content": request.message}
     ]
-    response = client.chat.completions.create(model="llama3-70b-8192", messages=messages, max_tokens=300)
+    response = client.chat.completions.create(model="openai/gpt-oss-120b", messages=messages, max_tokens=300)
     reply = response.choices[0].message.content
     return {"reply": translate_text(reply, request.language)}
 

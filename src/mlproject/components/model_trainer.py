@@ -122,7 +122,7 @@ class ModelTrainer:
                 mlflow.log_metric("f1_score", f1)
 
                 if tracking_url_type_store != "file":
-                    mlflow.sklearn.log_model(best_model, "model", registered_model_name=best_model_name)
+                    mlflow.sklearn.log_model(best_model, "model")
 
             if best_model_score < 0.6:
                 raise CustomException("No best model found")

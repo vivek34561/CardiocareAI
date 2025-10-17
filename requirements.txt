@@ -1,29 +1,45 @@
-numpy 
+# Core Python libraries
+numpy
 pandas
-python-dotenv
-mysql-connector-python
-pymysql
 scikit-learn
-# -e .
-seaborn
-catboost
-xgboost
-mlflow
-streamlit
 joblib
-langchain
-langchain_community
-openai
+seaborn
+-e .
+# ML libraries
+xgboost
+catboost
+
+# Environment management
 python-dotenv
-xhtml2pdf
-Pillow
-fpdf
-pytest
-faiss-cpu
-tiktoken
-groq
+
+# API / Web
 fastapi
 uvicorn
 pydantic
 requests
-joblib
+
+# Streamlit frontend
+streamlit
+
+# LangChain / LLM
+langchain
+langchain_community
+openai
+tiktoken
+faiss-cpu
+groq
+
+# Database connectors
+mysql-connector-python
+pymysql
+
+# PDF generation
+fpdf
+xhtml2pdf
+Pillow
+
+# MLflow
+mlflow
+
+# Testing
+pytest

@@ -2,7 +2,7 @@ import streamlit as st
 import requests
 
 # ------------------------- Backend URL -------------------------
-API_URL = "https://end-to-end-heart-disease-prediction-bfkm.onrender.com"   # Change if deployed
+API_URL = "http://127.0.0.1:8000"   # Change if deployed
 
 st.set_page_config(page_title="🪀 Heart Risk & Diet AI", layout="wide")
 
