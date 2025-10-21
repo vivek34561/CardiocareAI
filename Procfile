@@ -1,1 +1,1 @@
-web: gunicorn --bind 0.0.0.0:$PORT --workers 2 --worker-class uvicorn.workers.UvicornWorker app:app
+web: sh -c "streamlit run streamlit_app.py --server.port $PORT --server.enableCORS false"
