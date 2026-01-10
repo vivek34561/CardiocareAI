@@ -1,7 +1,3 @@
-Here’s your updated README with the new details you gave me, keeping it structured and polished:
-
----
-
 # 🫀 Heart Disease Prediction & AI Diet Assistant
 
 A **full-stack Streamlit web application** that predicts heart disease risk using advanced ML models and provides **AI-powered diet, lifestyle, and medical recommendations**.
